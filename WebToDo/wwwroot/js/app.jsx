@@ -3,11 +3,11 @@
     const refData = React.useRef(props.todoitem);
    
     function onClick(e) {
-        props.onRemove(data);
+        props.onRemove(props.todoitem);
     }
 
     function onChangeToDo(e) {
-        props.onChange(data);
+        props.onChange(props.todoitem);
     }
 
     const resolvedClass = {
