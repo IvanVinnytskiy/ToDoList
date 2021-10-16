@@ -1,0 +1,41 @@
+﻿body {
+    background-color:lightgrey;
+}
+
+.group-item {
+    height: 55px;
+    text-align: left;
+}
+
+.text-item {
+    color: red;
+    font-weight: bold;
+    vertical-align: middle;
+    position: absolute;
+    top: 30%;
+}
+
+.status-item {
+    position: absolute;
+    right: 100px;
+    width: 18px;
+    height: 18px;
+    bottom: 17px;
+}
+
+.button-item {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+}
+
+.main {
+    top: 100px;
+    left: 37%;
+    text-align: center;
+}
+
+.button-save {
+    width: 200px;
+    position: relative;
+}
