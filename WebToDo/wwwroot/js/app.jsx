@@ -1,30 +1,48 @@
 ﻿function ToDoItem(props) {
 
     const refData = React.useRef(props.todoitem);
-   
-    function onClick(e) {
+    const [text, setText] = React.useState(refData.current.text);
+
+    function onEditStatus(e) {
+        props.onChangeStatus(props.todoitem);
+    }
+
+    function onEditText(e) {
+        setText(e.target.value);
+    }
+
+    function onClickEdit(e) {
+        props.onChangeText(props.todoitem, text)
+    }
+
+    function onClickDelete(e) {
         props.onRemove(props.todoitem);
     }
 
-    function onChangeToDo(e) {
-        props.onChange(props.todoitem);
+    const activeToDoItem = {
+        color: 'green'
     }
 
-    const resolvedClass = {
+    const inactiveToDoItem = {
+        color: 'red',
         textDecoration: 'line-through'
     }
 
     return (
         <div className="group-item list-group-item list-group-item-warning">
-            <span className="text-item" style={props.todoitem.status == true ? resolvedClass : {}}>
-                {refData.current.text}
-            </span>
+            <input className="text-item"
+                type="text"
+                value={text}
+                onChange={onEditText}
+                style={props.todoitem.status == true ? inactiveToDoItem : activeToDoItem}
+            />
             <input className="status-item"
                 type="checkbox"
                 defaultChecked={refData.current.status}
-                 onChange={onChangeToDo}
+                onChange={onEditStatus}
             />
-            <button className="button-item btn btn-danger" onClick={onClick}>Delete</button>
+            <button className="button-item btn btn-warning" onClick={onClickEdit}>Edit</button>
+            <button className="button-item btn btn-danger" onClick={onClickDelete}>Delete</button>
         </div>
     );
 }
@@ -49,17 +67,15 @@ function ToDoList(props) {
 
     function onAddToDoItem(todoitem) {
         if (todoitem) {
-            const data = new FormData();
-            data.append("text", todoitem.textt);
-            data.append("status", todoitem.statuss);
             var xhr = new XMLHttpRequest();
             xhr.open("post", props.apiUrl, true);
+            xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8");
             xhr.onload = function () {
                 if (xhr.status === 200) {
                     loadData();
                 }
             };
-            xhr.send(data);
+            xhr.send(JSON.stringify(todoitem));
         }
     }
     
@@ -93,6 +109,22 @@ function ToDoList(props) {
         }
     }
 
+    function onChangeTextToDoItem(todoitem, text) {
+        if (todoitem) {
+            todoitem.text = text;
+            var url = props.apiUrl + "/changetask/";
+            var xhr = new XMLHttpRequest();
+            xhr.open("post", url, true);
+            xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    loadData();
+                }
+            };
+            xhr.send(JSON.stringify(todoitem));
+        }
+    }
+
     return (
         <div className="main well col-xs-3">
             <ToDoForm onToDoItemSubmit={onAddToDoItem} />
@@ -100,7 +132,7 @@ function ToDoList(props) {
             <div className="list-group">
                 {
                     todoitems.map(function (todoitem) {
-                        return <ToDoItem key={todoitem.id} todoitem={todoitem} onRemove={onRemoveToDoItem} onChange={onChangeStatusToDoItem} />
+                        return <ToDoItem key={todoitem.id} todoitem={todoitem} onRemove={onRemoveToDoItem} onChangeStatus={onChangeStatusToDoItem} onChangeText={onChangeTextToDoItem} />
                     })
                 }
             </div>
@@ -124,7 +156,7 @@ function ToDoForm(props) {
         if (!todoitemText) {
             return;
         }
-        props.onToDoItemSubmit({ textt: todoitemText, statuss: todoitemStatus });
+        props.onToDoItemSubmit({ text: todoitemText, status: todoitemStatus });
         setText("");
         setStatus(false);
     }
@@ -133,7 +165,7 @@ function ToDoForm(props) {
         <form onSubmit={onSubmit}>
             <div className="form-group">
                 <input type="text" className="form-control"
-                    placeholder="ToDoItem"
+                    placeholder="Your task"
                     value={text}
                     onChange={onTextChange}
                 />

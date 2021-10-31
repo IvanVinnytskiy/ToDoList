@@ -2,66 +2,92 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using WebToDo.Models;
+using WebToDo.Services;
 
 namespace WebToDo.Controllers
 {
     [Route("api/[controller]")]
-    public class ToDoController : Controller
+    [ApiController]
+    public class ToDoController : ControllerBase
     {
-        static readonly List<ToDoItem> data;
-        static ToDoController()
+        private readonly ToDoService _toDoService;
+
+        public ToDoController(ToDoService toDoService)
         {
-            data = new List<ToDoItem>
-            {
-                new ToDoItem { Id = Guid.NewGuid().ToString(), Text="codingffg", Status=true },
-                new ToDoItem { Id = Guid.NewGuid().ToString(), Text="reading", Status=false },
-            };
+            _toDoService = toDoService;
         }
+
         [HttpGet]
-        public IEnumerable<ToDoItem> Get()
-        {
-            var list = new List<ToDoItem>();
-            list.AddRange(data.Where(task => task.Status == false));
-            list.AddRange(data.Where(task => task.Status == true));
-            return list;
-        }
+        public ActionResult<List<ToDoItem>> Get() =>
+            _toDoService.Get();
 
-        [HttpPost]
-        public IActionResult Post(ToDoItem toDoItem)
+        [HttpGet("{id:length(24)}", Name = "GetToDoItem")]
+        public ActionResult<ToDoItem> Get(string id)
         {
-            toDoItem.Id = Guid.NewGuid().ToString();
-            data.Add(toDoItem);
-            return Ok(toDoItem);
-        }
+            var toDoItem = _toDoService.Get(id);
 
-        [HttpDelete("{id}")]
-        public IActionResult Delete(string id)
-        {
-            ToDoItem toDoItem = data.FirstOrDefault(x => x.Id == id);
             if (toDoItem == null)
             {
                 return NotFound();
             }
-            data.Remove(toDoItem);
-            return Ok(toDoItem);
+
+            return toDoItem;
         }
 
         [HttpPost]
-        [Route("changestatus/{id}")]
-        public IActionResult ChangeStatus(string id)
+        public ActionResult<ToDoItem> Post(ToDoItem toDoItem)
         {
-            var status = data.FirstOrDefault(x => x.Id == id).Status;
-            if (status)
+            _toDoService.Create(toDoItem);
+
+            CreatedAtRoute("GetToDoItem", new { id = toDoItem.Id.ToString() }, toDoItem);
+            return Ok(toDoItem);
+        }
+
+        [HttpDelete("{id:length(24)}")]
+        public IActionResult Delete(string id)
+        {
+            var toDoItem = _toDoService.Get(id);
+
+            if (toDoItem == null)
             {
-                data.FirstOrDefault(x => x.Id == id).Status = false;
+                return NotFound();
+            }
+
+            _toDoService.Remove(toDoItem.Id);
+
+            return Ok(toDoItem);
+        }
+
+        [HttpPost("changestatus/{id:length(24)}")]
+        public IActionResult Update(string id)
+        {
+            var toDoItem = _toDoService.Get(id);
+
+            if (toDoItem == null)
+            {
+                return NotFound();
+            }
+
+            if (toDoItem.Status)
+            {
+                toDoItem.Status = false;
             }
             else
             {
-                data.FirstOrDefault(x => x.Id == id).Status = true;
+                toDoItem.Status = true;
             }
-            return Ok();
+
+            _toDoService.Update(id, toDoItem);
+
+            return Ok(toDoItem);
+        }
+
+        [HttpPost("changetask/")]
+        public IActionResult UpdateTask(ToDoItem toDoItem)
+        {
+            _toDoService.Update(toDoItem.Id, toDoItem);
+            return Ok(toDoItem);
         }
     }
 }

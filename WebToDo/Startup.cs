@@ -7,11 +7,15 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using React.AspNet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using WebToDo.Models;
+using WebToDo.Services;
 
 namespace WebToDo
 {
@@ -31,6 +35,14 @@ namespace WebToDo
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddReact();
             services.AddJsEngineSwitcher(options => options.DefaultEngineName = ChakraCoreJsEngine.EngineName).AddChakraCore();
+            // requires using Microsoft.Extensions.Options
+            services.Configure<ToDoListDatabaseSettings>(
+                Configuration.GetSection(nameof(ToDoListDatabaseSettings)));
+
+            services.AddSingleton<IToDiListDatabaseSettings>(sp =>
+                sp.GetRequiredService<IOptions<ToDoListDatabaseSettings>>().Value);
+            services.AddSingleton<ToDoService>();
+
             services.AddControllersWithViews();
         }
 
